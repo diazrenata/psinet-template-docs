@@ -1,0 +1,22 @@
+---
+title: "instructions"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+---
+
+# Overview of tables
+
+![](Template_flowchart-for_users.jpg)
+
+# Instructions for entering data
+
+## T1: Study information
+
+## T2: Treatments
+
+### Instructions
+
+### Example scenarios
