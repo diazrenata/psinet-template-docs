@@ -35,7 +35,7 @@ _Not implemented yet, but once we have a stable version of the template in GShee
 
 Enter a single row of data with information about your study.
 
-If you are submitting data for multiple sites, please fill in separate templates for each.
+This template is designed to take data about one study "site" (roughly defined as, one or many plots associated with a single source of meteorological data). If you are submitting data for multiple sites, please fill in separate templates for each. For multiple sites 
 
 ## T2: Treatments
 
@@ -91,6 +91,8 @@ This table describes the data variables (plant water potential, and any addition
 At least one of Automated and/or Manual Plant Water Potential must be supplied (green rows). All other variables are optional. Rows are color coded according to which table each variable is reported in. Red rows are reported in the Soil Moisture tab; blue rows are reported in the Met data tab; purple rows are reported in the Plant Growth tab; and yellow rows are reported in the Soil Moisture Curves tab.
 
 For each variable, please check whether or not it is available and indicate at what level of organization (whole study, plots, or individual plants/groups of plants) it is collected, and remaining columns describing how the data were collected. If your data are in units other than the ones specified in the template, please convert your data to the specified units before reporting. 
+
+For meteorological data, if you have multiple sensors across the site, please report a site-level average using your best judgement given your knowledge of the site. 
 
 ## T6: Additional datasets
 
