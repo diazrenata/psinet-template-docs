@@ -29,6 +29,8 @@ _Not implemented yet, but once we have a stable version of the template in GShee
 
 ![](Template_flowchart-for_users.jpg)
 
+\newpage
+
 # Instructions for entering data
 
 ## T1: Study information
@@ -109,6 +111,8 @@ _For these and subsequent tables, follow the instructions in the column headers.
 ## T9: Soil moisture data (timeseries)
 
 ## T10: Meteorological data
+
+If you have multiple sensors across the site, please report a site-level average using your best judgement given your knowledge of the site. 
 
 ## T11: Plant growth data
 
