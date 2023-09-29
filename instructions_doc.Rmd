@@ -13,7 +13,7 @@ output:
 
 ## Google Sheets (preferred)
 
-The data entry template is available as a View-only Google Sheet here: https://docs.google.com/spreadsheets/d/1tbePuzJnCmVSI1n4J1yVnqH2MedqRT35vxUPtHzw3u8/edit#gid=1167393800 
+The data entry template is available as a View-only Google Sheet here: <https://docs.google.com/spreadsheets/d/1tbePuzJnCmVSI1n4J1yVnqH2MedqRT35vxUPtHzw3u8/edit#gid=1167393800>
 
 To enter your data, please *make a copy* of this Google Sheet using File > Make a copy. Name your copy of the sheet something informative. _RMD note: A specific format here may be helpful, but "shouldn't" matter as we will be extracting values programmatically from the Google Sheets, and the identifying information is also present in the table itself._
 
