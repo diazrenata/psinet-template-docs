@@ -1,0 +1,13 @@
+name: psinet-data-submission
+title: psinet-data-submission
+username: renatadiaz
+account: renatadiaz
+server: viz.datascience.arizona.edu
+hostUrl: https://viz.datascience.arizona.edu/__api__
+appId: 893
+bundleId: 3560
+url: https://viz.datascience.arizona.edu:443/content/3f461456-10cf-4b4d-abb8-e2fc3b218d87/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: instructions_doc.pdf|instructions_doc.Rmd|Template_flowchart-for_users.jpg

@@ -1,0 +1,12 @@
+question,option,input_type,input_id,dependence,dependence_value,required
+First name,Per Frederik,text,name_first,,,TRUE
+Last name,Scholander,text,name_last,,,TRUE
+Primary institution,Scripps Institute of Oceanography,text,institution,,,TRUE
+Email address,scholander@ucsd.edu,text,email,,,TRUE
+Google Sheet link,<link>,text,gsheet_url,,,TRUE
+Does the Validation sheet on this Google Sheet show any errors that you cannot resolve?,Yes,mc,validation_passing,,,TRUE
+Does the Validation sheet on this Google Sheet show any errors that you cannot resolve?,No,mc,validation_passing,,,TRUE
+"If there are validation errors that cannot be resolved, please explain them here:",Your answer,text,validation_explain,validation_passing,Yes,TRUE
+Have you updated the sharing settings on this Google Sheet so that <psinetrcn@gmail.com> has View access?,Yes,mc,gsheet_permissions,,,TRUE
+"Have you read, and do you consent to, the terms of contributing and using data as part of PSInet?",Yes,mc,consent,,,TRUE
+Do you have any additional comments?,Your answer,text,additional_comments,,,FALSE
