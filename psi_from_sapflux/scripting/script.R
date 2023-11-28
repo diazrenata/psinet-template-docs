@@ -42,11 +42,22 @@ sfn_env <-  readxl::read_xlsx(here::here("psi_from_sapflux", "scripting", "USA_M
 
 sfn_wp <- readxl::read_xlsx(here::here("psi_from_sapflux", "scripting", "USA_MOR_SF.xlsx"), sheet = 3, na = c("NA")) 
 
+##### Parse timestamp on sfn_wp, sfn_env
+
+sfn_wp <- sfn_wp |>
+  mutate(date = format(timestamp, "%Y%m%d"),
+         time = format(timestamp, "%H-%M-%S"))
+
+sfn_env <- sfn_env |>
+  mutate(formatted_timestamp = as.POSIXct(TIMESTAMP, format = "%Y/%m/%d %H:%M:%S"))  |>
+  mutate(date = format(formatted_timestamp, "%Y%m%d"),
+         time = format(formatted_timestamp, "%H:%M:%S"))
+
 ##### New file path
 
-site_name <- sfn_wp$id_sfn[1]
+site_name_sfn <- sfn_wp$id_sfn[1]
 
-site_path <- here::here("psi_from_sapflux", "scripting", paste0(site_name, "_as_psinet.xlsx"))
+site_path <- here::here("psi_from_sapflux", "scripting", paste0(site_name_sfn, "_as_psinet.xlsx"))
 
 orig_psinet_template <- loadWorkbook(here::here("psi_from_sapflux", "scripting", "psinet-blank.xlsx"))
 filled_psinet_template <- copyWorkbook(orig_psinet_template)
@@ -55,17 +66,17 @@ filled_psinet_template <- copyWorkbook(orig_psinet_template)
 
 site_md <- blank_psinet_template[[1]]
 
-site_md$`Submitting author first name`[2] <- sfn_site_md$si_contact_firstname[1]
-site_md$`Submitting author last name`[2] <- sfn_site_md$si_contact_lastname[1]
-site_md$Institution[2] <- sfn_site_md$si_contact_institution[1]
-site_md$Email[2] <- sfn_site_md$si_contact_email[1]
+site_md$`Submitting author first name`[2] <- sfn_wp$contact_firstname[1]
+site_md$`Submitting author last name`[2] <- sfn_wp$contact_lastname[1]
+site_md$Institution[2] <- sfn_wp$contact_institution[1]
+site_md$Email[2] <- sfn_wp$contact_email[1]
 site_md$`Data publication?`[2] <- !is.na(sfn_site_md$si_paper[1])
 site_md$`Data publication DOI(s)`[2] <- sfn_site_md$si_paper
 site_md$`Study type`[2] <- "Field study"
 site_md$`Begin year`[2] <- NA
 site_md$`End year`[2] <- NA
-site_md$`Latitude (WGS84)`[2] <- sfn_site_md$si_lat
-site_md$`Longitude (WGS84)`[2] <- sfn_site_md$si_long
+site_md$`Latitude (WGS84)`[2] <- unique(sfn_wp$lat)
+site_md$`Longitude (WGS84)`[2] <- unique(sfn_wp$lon)
 site_md$Remarks[2] <- sfn_site_md$si_remarks
 
 writeData(filled_psinet_template, 2, site_md)
@@ -196,7 +207,7 @@ data_avail <- blank_psinet_template[[3]]
 data_avail$Availability[7] <- TRUE
 data_avail$Publication[7] <- TRUE
 data_avail$Network[7] <- "SAPFLUXNET"
-data_avail$`Network or database ID`[7] <- site_name
+data_avail$`Network or database ID`[7] <- site_name_sfn
 data_avail$Remarks[7] <- "Imported from SAPFLUXNET"
 
 
@@ -225,6 +236,8 @@ writeData(filled_psinet_template, 5, treatments)
 
 #### Sheet 5 Plots ####
 
+# This is written assuming there is only one plot per study. 
+
 plots <- blank_psinet_template[[5]]
 
 plots$`Plot ID`[2] <- "Whole study"
@@ -241,5 +254,153 @@ writeData(filled_psinet_template, 6, plots)
 
 
 #### Sheet 6 Plants ####
+
+plants <- blank_psinet_template[[6]]
+
+if(all(is.na(sfn_wp$pl_code))) {
+  
+  # For records grouped by species
+  
+  if(all(sfn_wp$aggregation_level == "species level")) {
+    
+    # create this to use later
+    sfn_wp <-  sfn_wp |>
+      mutate(pl_code = paste0(site_name_sfn, "_", gsub(" ", "_", pl_species))) 
+    
+    sfn_individuals <- sfn_wp |>
+      select(pl_code, pl_treatment, pl_species, pl_height, pl_dbh, remarks) |>
+      distinct() |>
+      separate(col = pl_species, into = c("genus", "species"), sep = " ")
+    
+    matched_plants <- data.frame(Individual_ID = sfn_individuals$pl_code,
+                                 Number_of_individuals = NA,
+                                 Plot_ID = "Whole study",
+                                 Plot_Treatment_ID = NA,
+                                 Individual_Treatment_ID = sfn_individuals$pl_treatment,
+                                 Genus = sfn_individuals$genus,
+                                 Specific_epithet = sfn_individuals$species,
+                                 `Plant social status` = NA,
+                                 `Average height (m)` = sfn_individuals$pl_height,
+                                 `Average DBH (cm)` = sfn_individuals$pl_dbh,
+                                 `Leaf area index (m2/m2)` = NA,
+                                 Remarks = sfn_individuals$remarks)
+    
+    writeData(filled_psinet_template, 7, matched_plants, startCol = 2, startRow = 3, colNames = F)
+    
+    
+  } else {
+    # This is a case not covered by the example I have, so it will need re-visiting.
+    # In the instance of there being individuals tracked, but no pl_codes specified,
+    # I don't know if there's a rule, a priori, to use to detect unique individuals.
+    # Perhaps fill in this section based on a dataset that we see?
+    
+  }
+  
+} else {
+  
+  # For instances when pl_code in sfn_wp links to pl_code in sfn_plant_md
+  # This is a case not covered by the example I have, so it will probably need re-visiting.
+  # Question: do we preferentially pull values from the WP or from the MD files? 
+  # This code pulls from the MD file.
+  
+  matching_individuals <- sfn_wp |>
+    select(pl_code) |>
+    distinct() |>
+    left_join(sfn_plant_md, by = "pl_code")
+  
+  matched_plants <- plants[2, -1] |>
+    mutate(Individual_ID = matching_individuals$pl_code,
+           Number_of_individuals = NA,
+           Plot_ID = "Whole study",
+           Plot_Treatment_ID = NA,
+           Individual_Treatment_ID = matching_individuals$pl_treatment,
+           Genus = unlist(strsplit(matching_individuals$pl_species, split = " "))[[1]],
+           Specific_epithet = unlist(strsplit(matching_individuals$pl_species, split = " "))[[2]],
+           `Plant social status` = matching_individuals$pl_social,
+           `Average height (m)` = matching_individuals$pl_height,
+           `Average DBH (cm)` = matching_individuals$pl_dbh,
+           `Leaf area index (m2/m2)` = matching_individuals$pl_leaf_area,
+           Remarks = matching_individuals$pl_remarks)
+  writeData(filled_psinet_template, 7, matched_plants, startCol = 2, startRow = 3, colNames = F)
+  
+}
+
+#### Sheets 7 and 8 Plant water potential ####
+
+wp_dat <- blank_psinet_template[[7]]
+
+##### Sheet 7 #####
+
+if(any("chamber-bagged" %in% sfn_wp$method, "chamber-unbagged" %in% sfn_wp$method)) {
+  
+  pc_dat <- sfn_wp |>
+    filter(method != "psychometer")
+  
+  pc_wp_dat <- pc_dat |>
+    select(pl_code,
+           date,
+           time,
+           organ,
+           canopy_position,
+           `Ψ`,
+           `Ψ SE`,
+           `Ψ N`) |>
+    mutate(Plot_ID = NA, .after = pl_code) |> # Or "Whole study"
+    rename(Individual_ID = pl_code,
+           Date = date,
+           Time = time,
+           Organ = organ,
+           `Canopy position` = canopy_position,
+           `Water potential mean` = `Ψ`,
+           `Water potential SE` = `Ψ SE`,
+           `Water potential N` = `Ψ N`) |>
+    mutate(`Water potential SD` = sqrt(`Water potential N`) * `Water potential SE`, .after = `Water potential mean`) |>
+    select(-`Water potential SE`)
+  
+  writeData(filled_psinet_template, 8, pc_wp_dat, startCol = 2, startRow = 3, colNames = F)
+  
+  
+}
+
+
+##### Sheet 8 #####
+
+if("psychometer" %in% sfn_wp$method) {
+  
+  psyc_dat <- sfn_wp |>
+    filter(method == "psychometer")
+  
+  psyc_wp_dat <- psyc_dat |>
+    select(pl_code,
+           date,
+           time,
+           organ,
+           canopy_position,
+           `Ψ`,
+           `Ψ SE`,
+           `Ψ N`) |>
+    mutate(Plot_ID = NA, .after = pl_code) |> # Or "Whole study"
+    rename(Individual_ID = pl_code,
+           Date = date,
+           Time = time,
+           Organ = organ,
+           `Canopy position` = canopy_position,
+           `Water potential mean` = `Ψ`,
+           `Water potential SE` = `Ψ SE`,
+           `Water potential N` = `Ψ N`) |>
+    mutate(`Water potential SD` = sqrt(`Water potential N`) * `Water potential SE`, .after = `Water potential mean`) |>
+    select(-`Water potential SE`)
+  
+  writeData(filled_psinet_template, 9, psyc_wp_dat, startCol = 2, startRow = 3, colNames = F)
+  
+  
+}
+
+#### Sheet 9 Soil moisture data ####
+
+
+#### Sheet 10 Met data ####
+
+
 
 saveWorkbook(filled_psinet_template, site_path, overwrite = T)
