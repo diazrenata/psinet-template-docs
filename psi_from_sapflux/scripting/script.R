@@ -398,9 +398,61 @@ if("psychometer" %in% sfn_wp$method) {
 
 #### Sheet 9 Soil moisture data ####
 
+if(any(data_desc$`Is it available?`[4:5])) {
 
+sm_dat <- blank_psinet_template[[9]][FALSE, -1] |>
+  mutate(SWC_mean_shallow = as.numeric(SWC_mean_shallow),
+         SWC_mean_deep = as.numeric(SWC_mean_deep))
+
+
+  swc_col_table <- data.frame(swc_shallow = numeric(),
+                              swc_deep = numeric())
+  
+  swc_dat <- sfn_env |>
+    bind_rows(swc_col_table) |>
+    rename(Date = date,
+           Time = time,
+           SWC_mean_shallow = swc_shallow,
+           SWC_mean_deep = swc_deep) |>
+    bind_rows(sm_dat) |>
+    select(colnames(sm_dat)) |>
+    mutate(Plot_ID = "Whole study")
+
+  writeData(filled_psinet_template, 10, swc_dat, startCol = 2, startRow = 3, colNames = F)
+  
+}
 #### Sheet 10 Met data ####
 
-
+if(any(data_desc$`Is it available?`[8:15])) {
+  
+  met_dat <- blank_psinet_template[[10]][FALSE, -1] |>
+    mutate(across(3:10, as.numeric),
+           across(1:2, as.character))
+  
+  possible_met_dat_cnames <- sfn_env_md[FALSE,] |>
+    select(4:11) |>
+    rename_with( ~ gsub("env_", "", .x), everything()) |>
+    mutate(across(everything(), as.numeric))
+  
+  sfn_met_dat <- sfn_env |>
+    bind_rows(possible_met_dat_cnames) |>
+    rename(Date = date,
+           Time = time,
+           `Precipitation (mm)` = precip,
+           `Relative humidity (%)` = rh,
+           `Vapor pressure deficit (kPa)` = vpd,
+           `Air temperature (C)` = ta,
+           `Photosynthetically active radiation (PPFD) (µmolPhoton m-2 s-1)` = ppfd_in,
+           `Incident shortwave radiation` = sw_in,
+           `Net radiation (m s-1)` = netrad,
+           `Windspeed (m/s)` = ws
+    ) |>
+    bind_rows(met_dat) |>
+    select(colnames(met_dat))
+  
+  writeData(filled_psinet_template, 11, sfn_met_dat, startCol = 2, startRow = 3, colNames = F)
+  
+  
+}
 
 saveWorkbook(filled_psinet_template, site_path, overwrite = T)
